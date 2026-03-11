@@ -45,8 +45,11 @@ const seedData = async () => {
         duration: "2 hours",
         participants: 11,
         facilitator: "Asha",
-        coverImage: "/uploads/feb1.jpeg",
-        gallery: ["/uploads/feb1.jpeg", "/uploads/feb2.jpeg"]
+        coverImage: "https://res.cloudinary.com/dnwpnituv/image/upload/v1773260524/sewing-circle/events/bgqqeomk3grvtaovzvlf.jpg",
+        gallery: [
+          "https://res.cloudinary.com/dnwpnituv/image/upload/v1773260524/sewing-circle/events/bgqqeomk3grvtaovzvlf.jpg",
+          "https://res.cloudinary.com/dnwpnituv/image/upload/v1773260525/sewing-circle/events/erzbhtcdof01xckacips.jpg"
+        ]
       },
       {
         type: 'past',
@@ -58,8 +61,12 @@ const seedData = async () => {
         duration: "2 hours",
         participants: 12,
         facilitator: "Asha",
-        coverImage: "/uploads/april1.jpeg",
-        gallery: ["/uploads/april1.jpeg", "/uploads/april2.jpeg", "/uploads/april3.jpeg"]
+        coverImage: "https://res.cloudinary.com/dnwpnituv/image/upload/v1773260506/sewing-circle/events/couu3uvlgktp9gtt2eez.jpg",
+        gallery: [
+          "https://res.cloudinary.com/dnwpnituv/image/upload/v1773260506/sewing-circle/events/couu3uvlgktp9gtt2eez.jpg",
+          "https://res.cloudinary.com/dnwpnituv/image/upload/v1773260508/sewing-circle/events/yx6mmvoddfsqrdfgazsj.jpg",
+          "https://res.cloudinary.com/dnwpnituv/image/upload/v1773260509/sewing-circle/events/lhimftwlk49c36w15alb.jpg"
+        ]
       },
       {
         type: 'past',
@@ -71,8 +78,11 @@ const seedData = async () => {
         duration: "2 hours",
         participants: 9,
         facilitator: "Asha",
-        coverImage: "/uploads/june1.jpeg",
-        gallery: ["/uploads/june1.jpeg", "/uploads/june2.jpeg"]
+        coverImage: "https://res.cloudinary.com/dnwpnituv/image/upload/v1773260529/sewing-circle/events/zdnldqkxjuaxayh28ele.jpg",
+        gallery: [
+          "https://res.cloudinary.com/dnwpnituv/image/upload/v1773260529/sewing-circle/events/zdnldqkxjuaxayh28ele.jpg",
+          "https://res.cloudinary.com/dnwpnituv/image/upload/v1773260530/sewing-circle/events/vtgp7s0rmjttz7l9qgi3.jpg"
+        ]
       },
       {
         type: 'past',
@@ -84,8 +94,12 @@ const seedData = async () => {
         duration: "2 hours",
         participants: 8,
         facilitator: "Asha",
-        coverImage: "/uploads/oct1.jpeg",
-        gallery: ["/uploads/oct1.jpeg", "/uploads/oct2.jpeg", "/uploads/oct3.jpeg"]
+        coverImage: "https://res.cloudinary.com/dnwpnituv/image/upload/v1773260535/sewing-circle/events/c097ha1aikpua5ffjnbc.jpg",
+        gallery: [
+          "https://res.cloudinary.com/dnwpnituv/image/upload/v1773260535/sewing-circle/events/c097ha1aikpua5ffjnbc.jpg",
+          "https://res.cloudinary.com/dnwpnituv/image/upload/v1773260536/sewing-circle/events/b11hkyfh1ua7msngrxzf.jpg",
+          "https://res.cloudinary.com/dnwpnituv/image/upload/v1773260537/sewing-circle/events/pfozia1xp41bgt4auu67.jpg"
+        ]
       },
       {
         type: 'past',
@@ -97,8 +111,11 @@ const seedData = async () => {
         duration: "2 hours",
         participants: 12,
         facilitator: "Asha",
-        coverImage: "/uploads/dec1.jpeg",
-        gallery: ["/uploads/dec1.jpeg", "/uploads/dec2.jpeg"]
+        coverImage: "https://res.cloudinary.com/dnwpnituv/image/upload/v1773260519/sewing-circle/events/bxckdwqvtrmjflopzerz.jpg",
+        gallery: [
+          "https://res.cloudinary.com/dnwpnituv/image/upload/v1773260519/sewing-circle/events/bxckdwqvtrmjflopzerz.jpg",
+          "https://res.cloudinary.com/dnwpnituv/image/upload/v1773260520/sewing-circle/events/jinkwcibgdxfdqc4hb60.jpg"
+        ]
       }
     ];
 
