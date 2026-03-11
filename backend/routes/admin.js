@@ -2,6 +2,8 @@ const express = require('express');
 const jwt = require('jsonwebtoken');
 const multer = require('multer');
 const path = require('path');
+const cloudinary = require('../config/cloudinary');
+const { Readable } = require('stream');
 const Admin = require('../models/Admin');
 const Event = require('../models/Event');
 const auth = require('../middleware/auth');
@@ -21,17 +23,38 @@ const {
 } = require('../utils/tokenUtils');
 const router = express.Router();
 
-// Multer configuration for file uploads
-const storage = multer.diskStorage({
-  destination: (req, file, cb) => {
-    cb(null, 'uploads/');
-  },
-  filename: (req, file, cb) => {
-    cb(null, Date.now() + path.extname(file.originalname));
+// Multer configuration for file uploads (memory storage for Cloudinary)
+const storage = multer.memoryStorage();
+
+const upload = multer({ 
+  storage,
+  limits: {
+    fileSize: 5 * 1024 * 1024 // 5MB limit
   }
 });
 
-const upload = multer({ storage });
+// Helper function to upload buffer to Cloudinary
+const uploadToCloudinary = (buffer, folder) => {
+  return new Promise((resolve, reject) => {
+    const uploadStream = cloudinary.uploader.upload_stream(
+      {
+        folder: folder,
+        resource_type: 'image',
+        transformation: [
+          { width: 2000, height: 2000, crop: 'limit' },
+          { quality: 'auto' }
+        ]
+      },
+      (error, result) => {
+        if (error) reject(error);
+        else resolve(result);
+      }
+    );
+
+    const readableStream = Readable.from(buffer);
+    readableStream.pipe(uploadStream);
+  });
+};
 
 // Admin login
 router.post('/login', validateAdminLogin, async (req, res) => {
@@ -182,8 +205,14 @@ router.post('/events', auth, upload.array('images', 10), validateEventCreation, 
   try {
     const eventData = { ...req.body };
     
+    // Upload images to Cloudinary
     if (req.files && req.files.length > 0) {
-      eventData.gallery = req.files.map(file => `/uploads/${file.filename}`);
+      const uploadPromises = req.files.map(file => 
+        uploadToCloudinary(file.buffer, 'sewing-circle/events')
+      );
+      
+      const uploadResults = await Promise.all(uploadPromises);
+      eventData.gallery = uploadResults.map(result => result.secure_url);
       eventData.coverImage = eventData.gallery[0];
     }
 
@@ -191,6 +220,7 @@ router.post('/events', auth, upload.array('images', 10), validateEventCreation, 
     await event.save();
     res.status(201).json(event);
   } catch (error) {
+    console.error('Error creating event:', error);
     res.status(500).json({ message: error.message });
   }
 });
@@ -200,9 +230,26 @@ router.put('/events/:id', auth, upload.array('images', 10), validateEventUpdate,
   try {
     const eventData = { ...req.body };
     
+    // Upload new images to Cloudinary if provided
     if (req.files && req.files.length > 0) {
-      eventData.gallery = req.files.map(file => `/uploads/${file.filename}`);
-      eventData.coverImage = eventData.gallery[0];
+      const uploadPromises = req.files.map(file => 
+        uploadToCloudinary(file.buffer, 'sewing-circle/events')
+      );
+      
+      const uploadResults = await Promise.all(uploadPromises);
+      const newImages = uploadResults.map(result => result.secure_url);
+      
+      // Merge with existing gallery if present
+      if (eventData.gallery && Array.isArray(eventData.gallery)) {
+        eventData.gallery = [...eventData.gallery, ...newImages];
+      } else {
+        eventData.gallery = newImages;
+      }
+      
+      // Update cover image if it's the first image
+      if (!eventData.coverImage && eventData.gallery.length > 0) {
+        eventData.coverImage = eventData.gallery[0];
+      }
     }
 
     const event = await Event.findByIdAndUpdate(req.params.id, eventData, { new: true });
@@ -211,6 +258,7 @@ router.put('/events/:id', auth, upload.array('images', 10), validateEventUpdate,
     }
     res.json(event);
   } catch (error) {
+    console.error('Error updating event:', error);
     res.status(500).json({ message: error.message });
   }
 });
@@ -223,16 +271,21 @@ router.delete('/events/:id', auth, validateEventId, async (req, res) => {
       return res.status(404).json({ message: 'Event not found' });
     }
 
-    // Collect image filenames to delete
+    // Collect Cloudinary public IDs to delete
     const imagesToDelete = [];
-    if (event.coverImage) {
-      imagesToDelete.push(path.basename(event.coverImage));
+    
+    if (event.coverImage && event.coverImage.includes('cloudinary')) {
+      const publicId = event.coverImage.split('/').slice(-3).join('/').split('.')[0];
+      imagesToDelete.push(publicId);
     }
+    
     if (event.gallery && Array.isArray(event.gallery)) {
       event.gallery.forEach(img => {
-        const filename = path.basename(img);
-        if (!imagesToDelete.includes(filename)) {
-          imagesToDelete.push(filename);
+        if (img.includes('cloudinary')) {
+          const publicId = img.split('/').slice(-3).join('/').split('.')[0];
+          if (!imagesToDelete.includes(publicId)) {
+            imagesToDelete.push(publicId);
+          }
         }
       });
     }
@@ -240,14 +293,30 @@ router.delete('/events/:id', auth, validateEventId, async (req, res) => {
     // Delete the event
     await Event.findByIdAndDelete(req.params.id);
 
-    // Delete associated images
-    const fs = require('fs').promises;
+    // Delete associated images from Cloudinary
     const deletedImages = [];
     const failedImages = [];
 
-    for (const filename of imagesToDelete) {
+    for (const publicId of imagesToDelete) {
       try {
-        const filePath = path.join(__dirname, '../uploads', filename);
+        await cloudinary.uploader.destroy(publicId);
+        deletedImages.push(publicId);
+      } catch (error) {
+        console.error(`Failed to delete image ${publicId}:`, error);
+        failedImages.push(publicId);
+      }
+    }
+
+    res.json({ 
+      message: 'Event deleted successfully',
+      deletedImages: deletedImages.length,
+      failedImages: failedImages.length
+    });
+  } catch (error) {
+    console.error('Error deleting event:', error);
+    res.status(500).json({ message: error.message });
+  }
+});
         await fs.unlink(filePath);
         deletedImages.push(filename);
       } catch (error) {

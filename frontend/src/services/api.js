@@ -15,7 +15,9 @@ console.log('Environment check:', {
 // Helper function to get full image URL
 export const getImageUrl = (path) => {
   if (!path) return '';
+  // If it's already a full URL (Cloudinary or other CDN), return as is
   if (path.startsWith('http')) return path;
+  // For local paths, construct full URL
   const baseUrl = import.meta.env.VITE_API_URL || 'http://localhost:5000';
   return `${baseUrl}${path}`;
 };

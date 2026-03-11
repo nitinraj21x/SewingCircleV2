@@ -1,27 +1,13 @@
 const express = require('express');
 const router = express.Router();
 const multer = require('multer');
-const path = require('path');
-const fs = require('fs');
+const cloudinary = require('../config/cloudinary');
 const User = require('../models/User');
 const jwt = require('jsonwebtoken');
+const { Readable } = require('stream');
 
-// Ensure uploads directory exists
-const uploadsDir = path.join(__dirname, '../uploads/profiles');
-if (!fs.existsSync(uploadsDir)) {
-  fs.mkdirSync(uploadsDir, { recursive: true });
-}
-
-// Configure multer for file upload
-const storage = multer.diskStorage({
-  destination: function (req, file, cb) {
-    cb(null, uploadsDir);
-  },
-  filename: function (req, file, cb) {
-    const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
-    cb(null, 'profile-' + uniqueSuffix + path.extname(file.originalname));
-  }
-});
+// Configure multer to use memory storage (no disk storage needed)
+const storage = multer.memoryStorage();
 
 const fileFilter = (req, file, cb) => {
   // Accept images only
@@ -38,6 +24,29 @@ const upload = multer({
     fileSize: 5 * 1024 * 1024 // 5MB limit
   }
 });
+
+// Helper function to upload buffer to Cloudinary
+const uploadToCloudinary = (buffer, folder) => {
+  return new Promise((resolve, reject) => {
+    const uploadStream = cloudinary.uploader.upload_stream(
+      {
+        folder: folder,
+        resource_type: 'image',
+        transformation: [
+          { width: 1000, height: 1000, crop: 'limit' },
+          { quality: 'auto' }
+        ]
+      },
+      (error, result) => {
+        if (error) reject(error);
+        else resolve(result);
+      }
+    );
+
+    const readableStream = Readable.from(buffer);
+    readableStream.pipe(uploadStream);
+  });
+};
 
 // Middleware to verify user token
 const verifyUser = async (req, res, next) => {
@@ -70,7 +79,7 @@ const verifyUser = async (req, res, next) => {
 };
 
 // @route   POST /api/upload/profile-picture
-// @desc    Upload profile picture
+// @desc    Upload profile picture to Cloudinary
 // @access  Private
 router.post('/profile-picture', verifyUser, upload.single('image'), async (req, res) => {
   try {
@@ -84,24 +93,27 @@ router.post('/profile-picture', verifyUser, upload.single('image'), async (req, 
     const user = await User.findById(req.userId);
     
     if (!user) {
-      // Delete uploaded file if user not found
-      fs.unlinkSync(req.file.path);
       return res.status(404).json({
         success: false,
         message: 'User not found'
       });
     }
 
-    // Delete old profile picture if it exists and is not default
-    if (user.profilePicture && !user.profilePicture.includes('default-avatar')) {
-      const oldPath = path.join(__dirname, '..', user.profilePicture);
-      if (fs.existsSync(oldPath)) {
-        fs.unlinkSync(oldPath);
+    // Upload to Cloudinary
+    const result = await uploadToCloudinary(req.file.buffer, 'sewing-circle/profiles');
+
+    // Delete old image from Cloudinary if it exists
+    if (user.profilePicture && user.profilePicture.includes('cloudinary')) {
+      const publicId = user.profilePicture.split('/').slice(-2).join('/').split('.')[0];
+      try {
+        await cloudinary.uploader.destroy(publicId);
+      } catch (error) {
+        console.error('Error deleting old profile picture:', error);
       }
     }
 
-    // Update user profile picture
-    user.profilePicture = `/uploads/profiles/${req.file.filename}`;
+    // Update user profile picture with Cloudinary URL
+    user.profilePicture = result.secure_url;
     await user.save();
 
     res.json({
@@ -110,11 +122,6 @@ router.post('/profile-picture', verifyUser, upload.single('image'), async (req, 
       profilePicture: user.profilePicture
     });
   } catch (error) {
-    // Delete uploaded file on error
-    if (req.file) {
-      fs.unlinkSync(req.file.path);
-    }
-    
     console.error('Error uploading profile picture:', error);
     res.status(500).json({
       success: false,
@@ -125,7 +132,7 @@ router.post('/profile-picture', verifyUser, upload.single('image'), async (req, 
 });
 
 // @route   POST /api/upload/cover-photo
-// @desc    Upload cover photo
+// @desc    Upload cover photo to Cloudinary
 // @access  Private
 router.post('/cover-photo', verifyUser, upload.single('image'), async (req, res) => {
   try {
@@ -139,37 +146,58 @@ router.post('/cover-photo', verifyUser, upload.single('image'), async (req, res)
     const user = await User.findById(req.userId);
     
     if (!user) {
-      // Delete uploaded file if user not found
-      fs.unlinkSync(req.file.path);
       return res.status(404).json({
         success: false,
         message: 'User not found'
       });
     }
 
-    // Delete old cover photo if it exists and is not default
-    if (user.coverPhoto && !user.coverPhoto.includes('default-cover')) {
-      const oldPath = path.join(__dirname, '..', user.coverPhoto);
-      if (fs.existsSync(oldPath)) {
-        fs.unlinkSync(oldPath);
+    // Upload to Cloudinary with cover photo dimensions
+    const result = await cloudinary.uploader.upload_stream(
+      {
+        folder: 'sewing-circle/covers',
+        resource_type: 'image',
+        transformation: [
+          { width: 1500, height: 500, crop: 'limit' },
+          { quality: 'auto' }
+        ]
+      },
+      async (error, result) => {
+        if (error) {
+          console.error('Error uploading to Cloudinary:', error);
+          return res.status(500).json({
+            success: false,
+            message: 'Error uploading image',
+            error: error.message
+          });
+        }
+
+        // Delete old image from Cloudinary if it exists
+        if (user.coverPhoto && user.coverPhoto.includes('cloudinary')) {
+          const publicId = user.coverPhoto.split('/').slice(-2).join('/').split('.')[0];
+          try {
+            await cloudinary.uploader.destroy(publicId);
+          } catch (error) {
+            console.error('Error deleting old cover photo:', error);
+          }
+        }
+
+        // Update user cover photo with Cloudinary URL
+        user.coverPhoto = result.secure_url;
+        await user.save();
+
+        res.json({
+          success: true,
+          message: 'Cover photo uploaded successfully',
+          coverPhoto: user.coverPhoto
+        });
       }
-    }
+    );
 
-    // Update user cover photo
-    user.coverPhoto = `/uploads/profiles/${req.file.filename}`;
-    await user.save();
+    const readableStream = Readable.from(req.file.buffer);
+    readableStream.pipe(result);
 
-    res.json({
-      success: true,
-      message: 'Cover photo uploaded successfully',
-      coverPhoto: user.coverPhoto
-    });
   } catch (error) {
-    // Delete uploaded file on error
-    if (req.file) {
-      fs.unlinkSync(req.file.path);
-    }
-    
     console.error('Error uploading cover photo:', error);
     res.status(500).json({
       success: false,
