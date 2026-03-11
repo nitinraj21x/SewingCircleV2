@@ -317,22 +317,5 @@ router.delete('/events/:id', auth, validateEventId, async (req, res) => {
     res.status(500).json({ message: error.message });
   }
 });
-        await fs.unlink(filePath);
-        deletedImages.push(filename);
-      } catch (error) {
-        // Image might not exist or already deleted
-        failedImages.push({ filename, error: error.message });
-      }
-    }
-
-    res.json({ 
-      message: 'Event deleted successfully',
-      deletedImages: deletedImages.length,
-      failedImages: failedImages.length > 0 ? failedImages : undefined
-    });
-  } catch (error) {
-    res.status(500).json({ message: error.message });
-  }
-});
 
 module.exports = router;
