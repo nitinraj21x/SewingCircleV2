@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { X, Calendar, ThumbsUp, MessageCircle } from 'lucide-react';
-import { adminAPI } from '../../services/api';
+import { adminAPI, getImageUrl } from '../../services/api';
 
 const UserPostsModal = ({ userId, userName, onClose }) => {
   const [posts, setPosts] = useState([]);
@@ -73,7 +73,7 @@ const UserPostsModal = ({ userId, userName, onClose }) => {
                       {post.images.slice(0, 3).map((image, index) => (
                         <img
                           key={index}
-                          src={`http://localhost:5000${image}`}
+                          src={getImageUrl(image)}
                           alt={`Post image ${index + 1}`}
                           onError={(e) => {
                             e.target.style.display = 'none';

@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Users, CheckCircle, XCircle, Clock, Search, Filter, RefreshCw } from 'lucide-react';
-import { adminAPI } from '../../services/api';
+import { adminAPI, getImageUrl } from '../../services/api';
 
 const UserManagement = () => {
   const [users, setUsers] = useState([]);
@@ -311,7 +311,7 @@ const UserManagement = () => {
             <div key={user._id} className="user-card">
               <div className="user-card-header">
                 <img
-                  src={`http://localhost:5000${user.profilePicture}`}
+                  src={getImageUrl(user.profilePicture)}
                   alt={`${user.firstName} ${user.lastName}`}
                   className="user-avatar"
                   onError={(e) => {

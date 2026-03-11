@@ -12,6 +12,14 @@ console.log('Environment check:', {
   mode: import.meta.env.MODE
 });
 
+// Helper function to get full image URL
+export const getImageUrl = (path) => {
+  if (!path) return '';
+  if (path.startsWith('http')) return path;
+  const baseUrl = import.meta.env.VITE_API_URL || 'http://localhost:5000';
+  return `${baseUrl}${path}`;
+};
+
 const api = axios.create({
   baseURL: API_BASE_URL,
 });
@@ -124,6 +132,69 @@ export const eventsAPI = {
   
   // Get single event
   getEvent: (id) => api.get(`/events/${id}`),
+  
+  // Register for event
+  registerForEvent: (eventId) => api.post(`/events/${eventId}/register`, {}),
+  
+  // Unregister from event
+  unregisterFromEvent: (eventId) => api.delete(`/events/${eventId}/register`),
+};
+
+export const authAPI = {
+  // Get current user
+  getCurrentUser: () => api.get('/auth/me'),
+};
+
+export const profileAPI = {
+  // Get user profile
+  getProfile: (userId) => api.get(`/profile/${userId}`),
+  
+  // Update skills
+  updateSkills: (skills) => api.put('/profile/skills', { skills }),
+  
+  // Experience
+  addExperience: (data) => api.post('/profile/experience', data),
+  updateExperience: (id, data) => api.put(`/profile/experience/${id}`, data),
+  deleteExperience: (id) => api.delete(`/profile/experience/${id}`),
+  
+  // Education
+  addEducation: (data) => api.post('/profile/education', data),
+  updateEducation: (id, data) => api.put(`/profile/education/${id}`, data),
+  deleteEducation: (id) => api.delete(`/profile/education/${id}`),
+};
+
+export const uploadAPI = {
+  // Upload cover photo
+  uploadCoverPhoto: (formData) => api.post('/upload/cover-photo', formData, {
+    headers: { 'Content-Type': 'multipart/form-data' }
+  }),
+  
+  // Upload profile picture
+  uploadProfilePicture: (formData) => api.post('/upload/profile-picture', formData, {
+    headers: { 'Content-Type': 'multipart/form-data' }
+  }),
+};
+
+export const postsAPI = {
+  // Get feed
+  getFeed: (page = 1, limit = 10) => api.get(`/posts/feed?page=${page}&limit=${limit}`),
+  
+  // Like post
+  likePost: (postId) => api.post(`/posts/${postId}/like`, {}),
+  
+  // Comment on post
+  commentOnPost: (postId, content) => api.post(`/posts/${postId}/comment`, { content }),
+  
+  // Delete post
+  deletePost: (postId) => api.delete(`/posts/${postId}`),
+};
+
+export const followAPI = {
+  // Get follow suggestions
+  getSuggestions: () => api.get('/follow/suggestions'),
+  
+  // Follow user
+  followUser: (userId) => api.post(`/follow/${userId}`, {}),
 };
 
 export const adminAPI = {
@@ -228,6 +299,7 @@ export const adminAPI = {
   getUserStats: () => api.get('/admin/users/stats/overview'),
   getPendingUsers: () => api.get('/admin/users/pending'),
   getUsers: (status = '') => api.get(`/admin/users${status ? `?status=${status}` : ''}`),
+  getDetailedProfiles: () => api.get('/admin/users/profiles/detailed'),
   approveUser: (userId) => api.put(`/admin/users/${userId}/approve`, {}),
   rejectUser: (userId, reason) => api.put(`/admin/users/${userId}/reject`, { reason }),
   suspendUser: (userId, reason) => api.put(`/admin/users/${userId}/suspend`, { reason }),

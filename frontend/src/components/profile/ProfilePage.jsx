@@ -5,7 +5,7 @@ import {
   Briefcase, GraduationCap, Award, Users, ArrowLeft,
   Home, Bell, MessageCircle, Search, User, LogOut
 } from 'lucide-react';
-import axios from 'axios';
+import { authAPI, profileAPI } from '../../services/api';
 import ProfileHeader from './ProfileHeader';
 import ProfileAbout from './ProfileAbout';
 import ProfileExperience from './ProfileExperience';
@@ -32,9 +32,7 @@ const ProfilePage = () => {
       const token = localStorage.getItem('token');
       if (!token) return;
 
-      const response = await axios.get('http://localhost:5000/api/auth/me', {
-        headers: { Authorization: `Bearer ${token}` }
-      });
+      const response = await authAPI.getCurrentUser();
 
       setCurrentUser(response.data.user);
       setIsOwnProfile(response.data.user._id === userId);
@@ -46,7 +44,7 @@ const ProfilePage = () => {
   const fetchProfile = async () => {
     try {
       setLoading(true);
-      const response = await axios.get(`http://localhost:5000/api/profile/${userId}`);
+      const response = await profileAPI.getProfile(userId);
       setUser(response.data.user);
     } catch (err) {
       setError(err.response?.data?.message || 'Failed to load profile');

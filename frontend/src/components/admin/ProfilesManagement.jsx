@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Users, Search, Eye, Mail, MapPin, FileText, UserCheck, UserX, Circle } from 'lucide-react';
-import axios from 'axios';
+import { adminAPI, getImageUrl } from '../../services/api';
 import { useNavigate } from 'react-router-dom';
 import UserPostsModal from './UserPostsModal';
 
@@ -28,9 +28,7 @@ const ProfilesManagement = () => {
       }
 
       // Fetch detailed profiles with post counts
-      const response = await axios.get('http://localhost:5000/api/admin/users/profiles/detailed', {
-        headers: { Authorization: `Bearer ${token}` }
-      });
+      const response = await adminAPI.getDetailedProfiles();
 
       setProfiles(response.data.users || []);
       
@@ -172,7 +170,7 @@ const ProfilesManagement = () => {
                   <td>
                     <div className="user-cell">
                       <img
-                        src={`http://localhost:5000${profile.profilePicture}`}
+                        src={getImageUrl(profile.profilePicture)}
                         alt={`${profile.firstName} ${profile.lastName}`}
                         className="user-avatar-small"
                         onError={(e) => {
