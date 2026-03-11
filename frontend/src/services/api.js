@@ -223,6 +223,16 @@ export const adminAPI = {
   
   // Delete event
   deleteEvent: (id) => api.delete(`/admin/events/${id}`),
+  
+  // User management
+  getUserStats: () => api.get('/admin/users/stats/overview'),
+  getPendingUsers: () => api.get('/admin/users/pending'),
+  getUsers: (status = '') => api.get(`/admin/users${status ? `?status=${status}` : ''}`),
+  approveUser: (userId) => api.put(`/admin/users/${userId}/approve`, {}),
+  rejectUser: (userId, reason) => api.put(`/admin/users/${userId}/reject`, { reason }),
+  suspendUser: (userId, reason) => api.put(`/admin/users/${userId}/suspend`, { reason }),
+  reactivateUser: (userId) => api.put(`/admin/users/${userId}/reactivate`, {}),
+  getUserPosts: (userId) => api.get(`/admin/users/${userId}/posts`),
 };
 
 export default api;

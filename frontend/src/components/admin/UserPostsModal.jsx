@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { X, Calendar, ThumbsUp, MessageCircle } from 'lucide-react';
-import axios from 'axios';
+import { adminAPI } from '../../services/api';
 
 const UserPostsModal = ({ userId, userName, onClose }) => {
   const [posts, setPosts] = useState([]);
@@ -12,11 +12,7 @@ const UserPostsModal = ({ userId, userName, onClose }) => {
 
   const fetchUserPosts = async () => {
     try {
-      const token = localStorage.getItem('accessToken');
-      const response = await axios.get(
-        `http://localhost:5000/api/admin/users/${userId}/posts`,
-        { headers: { Authorization: `Bearer ${token}` } }
-      );
+      const response = await adminAPI.getUserPosts(userId);
       setPosts(response.data.posts);
       setLoading(false);
     } catch (error) {

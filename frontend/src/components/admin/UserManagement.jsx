@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Users, CheckCircle, XCircle, Clock, Search, Filter, RefreshCw } from 'lucide-react';
-import axios from 'axios';
+import { adminAPI } from '../../services/api';
 
 const UserManagement = () => {
   const [users, setUsers] = useState([]);
@@ -28,11 +28,9 @@ const UserManagement = () => {
         return;
       }
 
-      const headers = { Authorization: `Bearer ${token}` };
-
       // Fetch stats
       try {
-        const statsResponse = await axios.get('http://localhost:5000/api/admin/users/stats/overview', { headers });
+        const statsResponse = await adminAPI.getUserStats();
         setStats(statsResponse.data.stats);
       } catch (error) {
         console.error('Error fetching stats:', error);
@@ -40,13 +38,13 @@ const UserManagement = () => {
 
       // Fetch users based on filter
       if (filter === 'pending') {
-        const response = await axios.get('http://localhost:5000/api/admin/users/pending', { headers });
+        const response = await adminAPI.getPendingUsers();
         console.log('Pending users response:', response.data);
         setPendingUsers(response.data.users || []);
         setUsers([]);
       } else {
         const status = filter === 'all' ? '' : filter;
-        const response = await axios.get(`http://localhost:5000/api/admin/users?status=${status}`, { headers });
+        const response = await adminAPI.getUsers(status);
         console.log('Users response:', response.data);
         setUsers(response.data.users || []);
         setPendingUsers([]);
@@ -77,12 +75,7 @@ const UserManagement = () => {
 
     try {
       setActionLoading(true);
-      const token = localStorage.getItem('accessToken');
-      await axios.put(
-        `http://localhost:5000/api/admin/users/${userId}/approve`,
-        {},
-        { headers: { Authorization: `Bearer ${token}` } }
-      );
+      await adminAPI.approveUser(userId);
       
       alert('User approved successfully!');
       fetchData();
@@ -100,12 +93,7 @@ const UserManagement = () => {
 
     try {
       setActionLoading(true);
-      const token = localStorage.getItem('accessToken');
-      await axios.put(
-        `http://localhost:5000/api/admin/users/${userId}/reject`,
-        { reason },
-        { headers: { Authorization: `Bearer ${token}` } }
-      );
+      await adminAPI.rejectUser(userId, reason);
       
       alert('User rejected successfully!');
       fetchData();
@@ -123,12 +111,7 @@ const UserManagement = () => {
 
     try {
       setActionLoading(true);
-      const token = localStorage.getItem('accessToken');
-      await axios.put(
-        `http://localhost:5000/api/admin/users/${userId}/suspend`,
-        { reason },
-        { headers: { Authorization: `Bearer ${token}` } }
-      );
+      await adminAPI.suspendUser(userId, reason);
       
       alert('User suspended successfully!');
       fetchData();
@@ -145,12 +128,7 @@ const UserManagement = () => {
 
     try {
       setActionLoading(true);
-      const token = localStorage.getItem('accessToken');
-      await axios.put(
-        `http://localhost:5000/api/admin/users/${userId}/reactivate`,
-        {},
-        { headers: { Authorization: `Bearer ${token}` } }
-      );
+      await adminAPI.reactivateUser(userId);
       
       alert('User reactivated successfully!');
       fetchData();
