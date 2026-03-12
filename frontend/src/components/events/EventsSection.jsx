@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Calendar, Clock, MapPin, Users, ExternalLink, AlertCircle, RefreshCw } from 'lucide-react';
 import Reveal from '../shared/Reveal';
 import RegistrationModal from './RegistrationModal';
-import { eventsAPI } from '../../services/api';
+import { eventsAPI, getImageUrl } from '../../services/api';
 
 const EventsSection = React.memo(() => {
   const [selectedEvent, setSelectedEvent] = useState(null);
@@ -261,7 +261,7 @@ const EventsSection = React.memo(() => {
                       <div 
                         className="past-event-card"
                         style={{
-                          backgroundImage: `linear-gradient(rgba(0, 0, 0, 0.4), rgba(0, 0, 0, 0.6)), url(http://localhost:5000${event.coverImage})`,
+                          backgroundImage: `linear-gradient(rgba(0, 0, 0, 0.4), rgba(0, 0, 0, 0.6)), url(${getImageUrl(event.coverImage)})`,
                           backgroundSize: 'cover',
                           backgroundPosition: 'center'
                         }}
@@ -379,7 +379,7 @@ const EventsSection = React.memo(() => {
                 <div className="modal-gallery">
                   <div className="gallery-main-image">
                     <img 
-                      src={`http://localhost:5000${selectedEvent.gallery[currentGalleryIndex]}`}
+                      src={getImageUrl(selectedEvent.gallery[currentGalleryIndex])}
                       alt={`${selectedEvent.header} - Image ${currentGalleryIndex + 1}`}
                     />
                     

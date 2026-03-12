@@ -5,7 +5,7 @@ import {
   ChevronDown, ChevronUp, Image as ImageIcon,
   LayoutDashboard, Settings, Menu, UserCircle
 } from 'lucide-react';
-import { eventsAPI, adminAPI } from '../../services/api';
+import { eventsAPI, adminAPI, getImageUrl } from '../../services/api';
 import { useAuth, useLogout } from '../../contexts/AuthContext';
 import EventForm from './EventForm';
 import UserManagement from './UserManagement';
@@ -296,7 +296,7 @@ const AdminDashboard = () => {
               {event.coverImage && (
                 <div className="event-card-image">
                   <img 
-                    src={`http://localhost:5000${event.coverImage}`} 
+                    src={getImageUrl(event.coverImage)} 
                     alt={event.name || event.header}
                     onError={(e) => {
                       console.error('Image failed to load:', event.coverImage);
@@ -392,7 +392,7 @@ const AdminDashboard = () => {
                         {event.gallery.map((img, idx) => (
                           <div key={idx} className="gallery-thumb">
                             <img 
-                              src={`http://localhost:5000${img}`} 
+                              src={getImageUrl(img)} 
                               alt={`Gallery ${idx + 1}`}
                               onError={(e) => {
                                 console.error('Gallery image failed:', img);
@@ -554,7 +554,7 @@ const AdminDashboard = () => {
             <div className="preview-content">
               {selectedEvent.coverImage && (
                 <img 
-                  src={`http://localhost:5000${selectedEvent.coverImage}`} 
+                  src={getImageUrl(selectedEvent.coverImage)} 
                   alt={selectedEvent.name || selectedEvent.header}
                   className="preview-image"
                   onError={(e) => {

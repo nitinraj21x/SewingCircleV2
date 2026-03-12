@@ -181,6 +181,11 @@ export const postsAPI = {
   // Get feed
   getFeed: (page = 1, limit = 10) => api.get(`/posts/feed?page=${page}&limit=${limit}`),
   
+  // Create post
+  createPost: (formData) => api.post('/posts', formData, {
+    headers: { 'Content-Type': 'multipart/form-data' }
+  }),
+  
   // Like post
   likePost: (postId) => api.post(`/posts/${postId}/like`, {}),
   

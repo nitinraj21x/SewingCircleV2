@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Image, X } from 'lucide-react';
-import axios from 'axios';
+import { postsAPI, getImageUrl } from '../../services/api';
 
 const CreatePost = ({ user, onPostCreated }) => {
   const [content, setContent] = useState('');
@@ -43,7 +43,6 @@ const CreatePost = ({ user, onPostCreated }) => {
 
     try {
       setPosting(true);
-      const token = localStorage.getItem('token');
       const formData = new FormData();
       
       formData.append('content', content);
@@ -51,16 +50,7 @@ const CreatePost = ({ user, onPostCreated }) => {
         formData.append('images', image);
       });
 
-      const response = await axios.post(
-        'http://localhost:5000/api/posts',
-        formData,
-        {
-          headers: {
-            'Authorization': `Bearer ${token}`,
-            'Content-Type': 'multipart/form-data'
-          }
-        }
-      );
+      const response = await postsAPI.createPost(formData);
 
       onPostCreated(response.data.post);
       setContent('');
@@ -81,7 +71,7 @@ const CreatePost = ({ user, onPostCreated }) => {
       <div className="create-post-header">
         {user.profilePicture ? (
           <img 
-            src={`http://localhost:5000${user.profilePicture}`}
+            src={getImageUrl(user.profilePicture)}
             alt={`${user.firstName} ${user.lastName}`}
             className="create-post-avatar"
             onError={(e) => {
