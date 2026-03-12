@@ -4,7 +4,7 @@ import {
   Home, Users, Bell, MessageCircle, Search, 
   TrendingUp, Calendar, User, LogOut, MapPin, Clock
 } from 'lucide-react';
-import axios from 'axios';
+import { authAPI, postsAPI, followAPI, eventsAPI, getImageUrl } from '../../services/api';
 import CreatePost from './CreatePost';
 import PostCard from './PostCard';
 import './feed.css';
@@ -40,10 +40,7 @@ const FeedPage = () => {
         return;
       }
 
-      const response = await axios.get('http://localhost:5000/api/auth/me', {
-        headers: { Authorization: `Bearer ${token}` }
-      });
-
+      const response = await authAPI.getCurrentUser();
       setUser(response.data.user);
     } catch (error) {
       console.error('Error fetching user data:', error);
@@ -55,10 +52,7 @@ const FeedPage = () => {
 
   const fetchFeed = async () => {
     try {
-      const token = localStorage.getItem('token');
-      const response = await axios.get(`http://localhost:5000/api/posts/feed?page=${page}&limit=10`, {
-        headers: { Authorization: `Bearer ${token}` }
-      });
+      const response = await postsAPI.getFeed(page, 10);
 
       if (page === 1) {
         setPosts(response.data.posts);
@@ -76,11 +70,7 @@ const FeedPage = () => {
 
   const fetchSuggestions = async () => {
     try {
-      const token = localStorage.getItem('token');
-      const response = await axios.get('http://localhost:5000/api/follow/suggestions', {
-        headers: { Authorization: `Bearer ${token}` }
-      });
-
+      const response = await followAPI.getSuggestions();
       setSuggestions(response.data.suggestions.slice(0, 5));
     } catch (error) {
       console.error('Error fetching suggestions:', error);
@@ -89,7 +79,7 @@ const FeedPage = () => {
 
   const fetchUpcomingEvents = async () => {
     try {
-      const response = await axios.get('http://localhost:5000/api/events/upcoming');
+      const response = await eventsAPI.getUpcomingEvents();
       setUpcomingEvents(response.data.slice(0, 3)); // Show only 3 events
     } catch (error) {
       console.error('Error fetching events:', error);
@@ -98,12 +88,7 @@ const FeedPage = () => {
 
   const handleRegisterEvent = async (eventId) => {
     try {
-      const token = localStorage.getItem('token');
-      await axios.post(
-        `http://localhost:5000/api/events/${eventId}/register`,
-        {},
-        { headers: { Authorization: `Bearer ${token}` } }
-      );
+      await eventsAPI.registerForEvent(eventId);
       
       // Update the event in the list
       setUpcomingEvents(upcomingEvents.map(event => {
@@ -125,11 +110,7 @@ const FeedPage = () => {
 
   const handleUnregisterEvent = async (eventId) => {
     try {
-      const token = localStorage.getItem('token');
-      await axios.delete(
-        `http://localhost:5000/api/events/${eventId}/register`,
-        { headers: { Authorization: `Bearer ${token}` } }
-      );
+      await eventsAPI.unregisterFromEvent(eventId);
       
       // Update the event in the list
       setUpcomingEvents(upcomingEvents.map(event => {
@@ -168,11 +149,7 @@ const FeedPage = () => {
 
   const handleFollow = async (userId) => {
     try {
-      const token = localStorage.getItem('token');
-      await axios.post(`http://localhost:5000/api/follow/${userId}`, {}, {
-        headers: { Authorization: `Bearer ${token}` }
-      });
-
+      await followAPI.followUser(userId);
       // Remove from suggestions
       setSuggestions(suggestions.filter(s => s._id !== userId));
     } catch (error) {
@@ -263,7 +240,7 @@ const FeedPage = () => {
               <div className="profile-card-cover"></div>
               {user.profilePicture ? (
                 <img 
-                  src={`http://localhost:5000${user.profilePicture}`}
+                  src={getImageUrl(user.profilePicture)}
                   alt={`${user.firstName} ${user.lastName}`}
                   className="profile-card-avatar"
                   onError={(e) => {
@@ -423,7 +400,7 @@ const FeedPage = () => {
                   <div key={suggestion._id} className="suggestion-item">
                     {suggestion.profilePicture ? (
                       <img 
-                        src={`http://localhost:5000${suggestion.profilePicture}`}
+                        src={getImageUrl(suggestion.profilePicture)}
                         alt={`${suggestion.firstName} ${suggestion.lastName}`}
                         className="suggestion-avatar"
                         onError={(e) => {

@@ -4,7 +4,7 @@ import {
   ThumbsUp, MessageCircle, Share2, MoreHorizontal,
   Trash2, Edit, Send
 } from 'lucide-react';
-import axios from 'axios';
+import { postsAPI, getImageUrl } from '../../services/api';
 
 const PostCard = ({ post, currentUser, onPostUpdated, onPostDeleted }) => {
   const navigate = useNavigate();
@@ -19,13 +19,7 @@ const PostCard = ({ post, currentUser, onPostUpdated, onPostDeleted }) => {
 
   const handleLike = async () => {
     try {
-      const token = localStorage.getItem('token');
-      const response = await axios.post(
-        `http://localhost:5000/api/posts/${post._id}/like`,
-        {},
-        { headers: { Authorization: `Bearer ${token}` } }
-      );
-
+      const response = await postsAPI.likePost(post._id);
       setLiked(response.data.liked);
       setLikeCount(response.data.likeCount);
       onPostUpdated(response.data.post);
@@ -41,13 +35,7 @@ const PostCard = ({ post, currentUser, onPostUpdated, onPostDeleted }) => {
 
     try {
       setCommenting(true);
-      const token = localStorage.getItem('token');
-      const response = await axios.post(
-        `http://localhost:5000/api/posts/${post._id}/comment`,
-        { content: commentText },
-        { headers: { Authorization: `Bearer ${token}` } }
-      );
-
+      const response = await postsAPI.commentOnPost(post._id, commentText);
       onPostUpdated(response.data.post);
       setCommentText('');
       setShowComments(true);
@@ -63,12 +51,7 @@ const PostCard = ({ post, currentUser, onPostUpdated, onPostDeleted }) => {
     if (!window.confirm('Are you sure you want to delete this post?')) return;
 
     try {
-      const token = localStorage.getItem('token');
-      await axios.delete(
-        `http://localhost:5000/api/posts/${post._id}`,
-        { headers: { Authorization: `Bearer ${token}` } }
-      );
-
+      await postsAPI.deletePost(post._id);
       onPostDeleted(post._id);
     } catch (error) {
       console.error('Error deleting post:', error);
@@ -97,8 +80,8 @@ const PostCard = ({ post, currentUser, onPostUpdated, onPostDeleted }) => {
       <div className="post-header">
         {post.author.profilePicture ? (
           <img 
-            src={`http://localhost:5000${post.author.profilePicture}`}
-            alt={`${post.author.firstName} ${post.author.lastName}`}
+            src={getImageUrl(post.author.profilePicture)}
+            alt={`${post.author.firstName} ${post.lastName}`}
             className="post-avatar"
             onClick={() => navigate(`/profile/${post.author._id}`)}
             onError={(e) => {
@@ -166,7 +149,7 @@ const PostCard = ({ post, currentUser, onPostUpdated, onPostDeleted }) => {
           {post.images.map((image, index) => (
             <img 
               key={index}
-              src={`http://localhost:5000${image}`}
+              src={getImageUrl(image)}
               alt={`Post image ${index + 1}`}
               onError={(e) => {
                 e.target.style.display = 'none';
@@ -211,7 +194,7 @@ const PostCard = ({ post, currentUser, onPostUpdated, onPostDeleted }) => {
           <form className="add-comment" onSubmit={handleComment}>
             {currentUser?.profilePicture ? (
               <img 
-                src={`http://localhost:5000${currentUser.profilePicture}`}
+                src={getImageUrl(currentUser.profilePicture)}
                 alt="Your avatar"
                 className="comment-avatar"
                 onError={(e) => {
@@ -257,7 +240,7 @@ const PostCard = ({ post, currentUser, onPostUpdated, onPostDeleted }) => {
                 <div key={comment._id} className="comment">
                   {comment.author.profilePicture ? (
                     <img 
-                      src={`http://localhost:5000${comment.author.profilePicture}`}
+                      src={getImageUrl(comment.author.profilePicture)}
                       alt={`${comment.author.firstName} ${comment.author.lastName}`}
                       className="comment-avatar"
                       onClick={() => navigate(`/profile/${comment.author._id}`)}
