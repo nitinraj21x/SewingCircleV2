@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Briefcase, Plus, Edit, Trash2, X, Save } from 'lucide-react';
-import axios from 'axios';
+import { profileAPI } from '../../services/api';
 
 const ProfileExperience = ({ experience, isOwnProfile, onUpdate }) => {
   const [showForm, setShowForm] = useState(false);
@@ -49,16 +49,11 @@ const ProfileExperience = ({ experience, isOwnProfile, onUpdate }) => {
     setLoading(true);
 
     try {
-      const token = localStorage.getItem('token');
-      const url = editingId
-        ? `http://localhost:5000/api/profile/experience/${editingId}`
-        : 'http://localhost:5000/api/profile/experience';
-      
-      const method = editingId ? 'put' : 'post';
-      
-      await axios[method](url, formData, {
-        headers: { 'Authorization': `Bearer ${token}` }
-      });
+      if (editingId) {
+        await profileAPI.updateExperience(editingId, formData);
+      } else {
+        await profileAPI.addExperience(formData);
+      }
 
       setShowForm(false);
       onUpdate();
@@ -73,10 +68,7 @@ const ProfileExperience = ({ experience, isOwnProfile, onUpdate }) => {
     if (!window.confirm('Are you sure you want to delete this experience?')) return;
 
     try {
-      const token = localStorage.getItem('token');
-      await axios.delete(`http://localhost:5000/api/profile/experience/${expId}`, {
-        headers: { 'Authorization': `Bearer ${token}` }
-      });
+      await profileAPI.deleteExperience(expId);
       onUpdate();
     } catch (error) {
       alert('Error deleting experience: ' + (error.response?.data?.message || error.message));

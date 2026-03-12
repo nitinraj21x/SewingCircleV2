@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Award, Plus, X, Save } from 'lucide-react';
-import axios from 'axios';
+import { profileAPI } from '../../services/api';
 
 const ProfileSkills = ({ skills, isOwnProfile, onUpdate }) => {
   const [isEditing, setIsEditing] = useState(false);
@@ -27,12 +27,7 @@ const ProfileSkills = ({ skills, isOwnProfile, onUpdate }) => {
   const handleSave = async () => {
     setLoading(true);
     try {
-      const token = localStorage.getItem('token');
-      await axios.put(
-        'http://localhost:5000/api/profile/skills',
-        { skills: editedSkills },
-        { headers: { 'Authorization': `Bearer ${token}` } }
-      );
+      await profileAPI.updateSkills(editedSkills);
       setIsEditing(false);
       onUpdate();
     } catch (error) {

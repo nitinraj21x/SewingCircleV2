@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Camera, Edit, MapPin, Mail } from 'lucide-react';
-import axios from 'axios';
+import { uploadAPI, authAPI, getImageUrl } from '../../services/api';
 
 const ProfileHeader = ({ user, isOwnProfile, onEdit, onRefresh }) => {
   const [uploadingCover, setUploadingCover] = useState(false);
@@ -15,13 +15,7 @@ const ProfileHeader = ({ user, isOwnProfile, onEdit, onRefresh }) => {
 
     try {
       setUploadingCover(true);
-      const token = localStorage.getItem('token');
-      await axios.post('http://localhost:5000/api/upload/cover-photo', formData, {
-        headers: {
-          'Authorization': `Bearer ${token}`,
-          'Content-Type': 'multipart/form-data'
-        }
-      });
+      await uploadAPI.uploadCoverPhoto(formData);
       onRefresh();
     } catch (error) {
       alert('Failed to upload cover photo: ' + (error.response?.data?.message || error.message));
@@ -39,20 +33,11 @@ const ProfileHeader = ({ user, isOwnProfile, onEdit, onRefresh }) => {
 
     try {
       setUploadingProfile(true);
-      const token = localStorage.getItem('token');
-      await axios.post('http://localhost:5000/api/upload/profile-picture', formData, {
-        headers: {
-          'Authorization': `Bearer ${token}`,
-          'Content-Type': 'multipart/form-data'
-        }
-      });
+      await uploadAPI.uploadProfilePicture(formData);
       onRefresh();
       
       // Update localStorage user data
-      const currentUser = JSON.parse(localStorage.getItem('user'));
-      const response = await axios.get('http://localhost:5000/api/auth/me', {
-        headers: { 'Authorization': `Bearer ${token}` }
-      });
+      const response = await authAPI.getCurrentUser();
       localStorage.setItem('user', JSON.stringify(response.data.user));
     } catch (error) {
       alert('Failed to upload profile picture: ' + (error.response?.data?.message || error.message));
@@ -66,7 +51,7 @@ const ProfileHeader = ({ user, isOwnProfile, onEdit, onRefresh }) => {
       {/* Cover Photo */}
       <div className="cover-photo-container">
         <img
-          src={`http://localhost:5000${user.coverPhoto}`}
+          src={getImageUrl(user.coverPhoto)}
           alt="Cover"
           className="cover-photo"
           onError={(e) => {
@@ -92,7 +77,7 @@ const ProfileHeader = ({ user, isOwnProfile, onEdit, onRefresh }) => {
       <div className="profile-header-content">
         <div className="profile-picture-container">
           <img
-            src={`http://localhost:5000${user.profilePicture}`}
+            src={getImageUrl(user.profilePicture)}
             alt={`${user.firstName} ${user.lastName}`}
             className="profile-picture"
             onError={(e) => {

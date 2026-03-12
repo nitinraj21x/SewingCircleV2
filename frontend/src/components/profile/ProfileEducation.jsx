@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { GraduationCap, Plus, Edit, Trash2, X, Save } from 'lucide-react';
-import axios from 'axios';
+import { profileAPI } from '../../services/api';
 
 const ProfileEducation = ({ education, isOwnProfile, onUpdate }) => {
   const [showForm, setShowForm] = useState(false);
@@ -49,16 +49,11 @@ const ProfileEducation = ({ education, isOwnProfile, onUpdate }) => {
     setLoading(true);
 
     try {
-      const token = localStorage.getItem('token');
-      const url = editingId
-        ? `http://localhost:5000/api/profile/education/${editingId}`
-        : 'http://localhost:5000/api/profile/education';
-      
-      const method = editingId ? 'put' : 'post';
-      
-      await axios[method](url, formData, {
-        headers: { 'Authorization': `Bearer ${token}` }
-      });
+      if (editingId) {
+        await profileAPI.updateEducation(editingId, formData);
+      } else {
+        await profileAPI.addEducation(formData);
+      }
 
       setShowForm(false);
       onUpdate();
@@ -73,10 +68,7 @@ const ProfileEducation = ({ education, isOwnProfile, onUpdate }) => {
     if (!window.confirm('Are you sure you want to delete this education?')) return;
 
     try {
-      const token = localStorage.getItem('token');
-      await axios.delete(`http://localhost:5000/api/profile/education/${eduId}`, {
-        headers: { 'Authorization': `Bearer ${token}` }
-      });
+      await profileAPI.deleteEducation(eduId);
       onUpdate();
     } catch (error) {
       alert('Error deleting education: ' + (error.response?.data?.message || error.message));
