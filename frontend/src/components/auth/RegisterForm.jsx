@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { UserPlus, Mail, Lock, User, MapPin, Briefcase, Tag } from 'lucide-react';
-import axios from 'axios';
+import api from '../../services/api';
 import './auth.css';
 
 const RegisterForm = () => {
@@ -52,7 +52,7 @@ const RegisterForm = () => {
         ? formData.skills.split(',').map(skill => skill.trim()).filter(skill => skill)
         : [];
 
-      const response = await axios.post('http://localhost:5000/api/auth/register', {
+      const response = await api.post('/auth/register', {
         firstName: formData.firstName,
         lastName: formData.lastName,
         email: formData.email,
