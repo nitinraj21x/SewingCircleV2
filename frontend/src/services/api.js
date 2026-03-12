@@ -44,7 +44,8 @@ const processQueue = (error, token = null) => {
 
 // Add auth token to requests if available
 api.interceptors.request.use((config) => {
-  const token = localStorage.getItem('accessToken');
+  // Check for both admin token (accessToken) and user token (token)
+  const token = localStorage.getItem('accessToken') || localStorage.getItem('token');
   if (token) {
     config.headers.Authorization = `Bearer ${token}`;
   }
