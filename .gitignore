@@ -1,0 +1,43 @@
+# Dependencies
+node_modules/
+*/node_modules/
+
+# Environment variables - backend has secrets, never commit
+backend/.env
+backend/.env.local
+backend/.env.production
+
+# Frontend .env is safe to commit (only public API URL)
+# frontend/.env is NOT ignored
+
+# Build outputs
+dist/
+build/
+*/dist/
+*/build/
+
+# Logs
+*.log
+npm-debug.log*
+logs/
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# Uploads (local only - Render uses ephemeral filesystem)
+uploads/
+*/uploads/
+
+# Testing
+coverage/
+
+# Misc
+.cache/
+temp/
